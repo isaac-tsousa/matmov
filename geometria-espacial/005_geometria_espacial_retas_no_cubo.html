@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cubo Interativo: Posições Relativas - Matmov</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f5; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: crosshair; }
+        #ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 20px 30px; border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); text-align: center; min-width: 450px;
+            border: 2px solid #c8d6e5;
+        }
+        h2 { margin: 0 0 10px 0; color: #2f3640; font-size: 1.2rem; text-transform: uppercase; }
+        #status-box {
+            margin: 15px 0; padding: 15px; background: #f5f6fa; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; color: #353b48; border-left: 5px solid #bdc3c7;
+            min-height: 50px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        button {
+            background: #e84118; border: none; padding: 10px 20px; font-size: 1rem;
+            border-radius: 8px; cursor: pointer; color: white; font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 4px 10px rgba(232, 65, 24, 0.3);
+        }
+        button:hover { background: #c23616; transform: translateY(-2px); }
+        .instrucao {
+            position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9);
+            padding: 10px 15px; border-radius: 8px; color: #353b48; font-size: 0.9rem;
+            pointer-events: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); line-height: 1.5;
+        }
+        /* Classes dinâmicas para o resultado */
+        .res-concorrentes { border-left-color: #e84118 !important; background: #ffefea !important; }
+        .res-paralelas { border-left-color: #4cd137 !important; background: #eaffea !important; }
+        .res-reversas { border-left-color: #9c88ff !important; background: #f4f0ff !important; }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" id="matmov-nav-active">Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Dica Matmov:</b><br>
+        1. Gire o cubo com o mouse.<br>
+        2. <b>Clique diretamente</b> nas arestas (linhas) do cubo.<br>
+        3. Selecione duas arestas para ver a mágica!
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Laboratório do Cubo</h2>
+        <div id="status-box">Clique em uma aresta para começar.</div>
+        <button onclick="resetSelection()">Limpar Seleção</button>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xeef2f5);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(6, 6, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // Luzes
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 15, 10);
+        scene.add(dirLight);
+
+        // Grupo para guardar os efeitos visuais dinâmicos (O plano ou o vértice brilhante)
+        const dynamicVisuals = new THREE.Group();
+        scene.add(dynamicVisuals);
+
+        // Geometria do Cubo
+        const s = 2; 
+        const vertices = [
+            new THREE.Vector3(-s, -s, -s), new THREE.Vector3(s, -s, -s),
+            new THREE.Vector3(s, s, -s), new THREE.Vector3(-s, s, -s),
+            new THREE.Vector3(-s, -s, s), new THREE.Vector3(s, -s, s),
+            new THREE.Vector3(s, s, s), new THREE.Vector3(-s, s, s)
+        ];
+
+        const edgePairs = [
+            [0,1], [1,2], [2,3], [3,0], // Fundo
+            [4,5], [5,6], [6,7], [7,4], // Frente
+            [0,4], [1,5], [2,6], [3,7]  // Conexões laterais
+        ];
+
+        // Materiais
+        const matNormal = new THREE.MeshStandardMaterial({ color: 0x34495e });
+        const matHighlight1 = new THREE.MeshStandardMaterial({ color: 0x0097e6, emissive: 0x003366 }); 
+        const matHighlight2 = new THREE.MeshStandardMaterial({ color: 0x0097e6, emissive: 0x003366 }); 
+        const matVertex = new THREE.MeshBasicMaterial({ color: 0x7f8fa6 });
+
+        // Desenhar Vértices
+        const sphereGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        vertices.forEach(v => {
+            const sphere = new THREE.Mesh(sphereGeo, matVertex);
+            sphere.position.copy(v);
+            scene.add(sphere);
+        });
+
+        // Desenhar Arestas
+        const edges = [];
+        edgePairs.forEach(pair => {
+            const v1 = vertices[pair[0]];
+            const v2 = vertices[pair[1]];
+            const distance = v1.distanceTo(v2);
+            const midPoint = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+            
+            const cylinderGeo = new THREE.CylinderGeometry(0.12, 0.12, distance, 16);
+            const edgeMesh = new THREE.Mesh(cylinderGeo, matNormal.clone());
+            
+            edgeMesh.position.copy(midPoint);
+            edgeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3().subVectors(v2, v1).normalize());
+            
+            edgeMesh.userData = { v1: v1, v2: v2 };
+            edges.push(edgeMesh);
+            scene.add(edgeMesh);
+        });
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let selectedEdges = [];
+
+        window.addEventListener('click', onMouseClick);
+
+        function onMouseClick(event) {
+            if (event.clientY > window.innerHeight - 150 && event.clientX > window.innerWidth/2 - 250 && event.clientX < window.innerWidth/2 + 250) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(edges);
+
+            if (intersects.length > 0) {
+                const clickedEdge = intersects[0].object;
+                
+                if (selectedEdges.includes(clickedEdge)) return;
+                if (selectedEdges.length === 2) resetSelection();
+
+                selectedEdges.push(clickedEdge);
+                clickedEdge.material = selectedEdges.length === 1 ? matHighlight1 : matHighlight2;
+
+                updateUI();
+            }
+        }
+
+        function resetSelection() {
+            selectedEdges.forEach(edge => { edge.material = matNormal; });
+            selectedEdges = [];
+            
+            // Limpa os efeitos visuais gerados (Plano ou Vértice)
+            while(dynamicVisuals.children.length > 0){ 
+                dynamicVisuals.remove(dynamicVisuals.children[0]); 
+            }
+            
+            const statusBox = document.getElementById('status-box');
+            statusBox.innerHTML = "Clique em uma aresta para começar.";
+            statusBox.className = "";
+        }
+
+        function updateUI() {
+            const statusBox = document.getElementById('status-box');
+            
+            if (selectedEdges.length === 1) {
+                statusBox.innerHTML = "<span style='color: #0097e6;'>Primeira aresta selecionada.</span><br>Selecione a segunda aresta.";
+                statusBox.className = "";
+            } 
+            else if (selectedEdges.length === 2) {
+                classifyEdges(selectedEdges[0], selectedEdges[1], statusBox);
+            }
+        }
+
+        function classifyEdges(edgeA, edgeB, statusBox) {
+            const vA1 = edgeA.userData.v1;
+            const vA2 = edgeA.userData.v2;
+            const vB1 = edgeB.userData.v1;
+            const vB2 = edgeB.userData.v2;
+
+            // 1. Checar se compartilham um vértice (Concorrentes)
+            let sharedVertex = null;
+            if (vA1.equals(vB1) || vA1.equals(vB2)) sharedVertex = vA1;
+            else if (vA2.equals(vB1) || vA2.equals(vB2)) sharedVertex = vA2;
+
+            if (sharedVertex) {
+                statusBox.innerHTML = "<b style='color:#e84118; font-size:1.3rem;'>CONCORRENTES</b><br><span style='font-weight:normal; margin-top:5px;'>Elas se encontram em um vértice (quina) do cubo.</span>";
+                statusBox.className = "res-concorrentes";
+                
+                // MÁGICA 1: Destacar a quina
+                const glowGeo = new THREE.SphereGeometry(0.35, 16, 16);
+                const glowMat = new THREE.MeshBasicMaterial({ color: 0xe84118, transparent: true, opacity: 0.9 });
+                const glowSphere = new THREE.Mesh(glowGeo, glowMat);
+                glowSphere.position.copy(sharedVertex);
+                dynamicVisuals.add(glowSphere);
+                
+                edgeA.material = new THREE.MeshStandardMaterial({ color: 0xe84118, emissive: 0x660000 });
+                edgeB.material = new THREE.MeshStandardMaterial({ color: 0xe84118, emissive: 0x660000 });
+                return;
+            }
+
+            // 2. Checar se são Paralelas
+            const dirA = new THREE.Vector3().subVectors(vA2, vA1).normalize();
+            const dirB = new THREE.Vector3().subVectors(vB2, vB1).normalize();
+            const crossProduct = new THREE.Vector3().crossVectors(dirA, dirB);
+            
+            if (crossProduct.length() < 0.01) {
+                statusBox.innerHTML = "<b style='color:#4cd137; font-size:1.3rem;'>PARALELAS</b><br><span style='font-weight:normal; margin-top:5px;'>Duas retas paralelas formam um PLANO perfeito.</span>";
+                statusBox.className = "res-paralelas";
+                
+                edgeA.material = new THREE.MeshStandardMaterial({ color: 0x4cd137, emissive: 0x004400 });
+                edgeB.material = new THREE.MeshStandardMaterial({ color: 0x4cd137, emissive: 0x004400 });
+
+                // MÁGICA 2: Desenhar o plano conectando as duas arestas
+                const geom = new THREE.BufferGeometry();
+                const verticesArray = new Float32Array([
+                    vA1.x, vA1.y, vA1.z,  vA2.x, vA2.y, vA2.z,
+                    vB1.x, vB1.y, vB1.z,  vB2.x, vB2.y, vB2.z
+                ]);
+                
+                const dotProduct = dirA.dot(dirB);
+                let indices = (dotProduct > 0) ? [0, 2, 3, 0, 3, 1] : [0, 3, 2, 0, 2, 1];
+                
+                geom.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
+                geom.setIndex(indices);
+                geom.computeVertexNormals();
+
+                const planeMat = new THREE.MeshBasicMaterial({ color: 0x4cd137, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+                const planeMesh = new THREE.Mesh(geom, planeMat);
+                dynamicVisuals.add(planeMesh);
+                
+                return;
+            }
+
+            // 3. Reversas
+            statusBox.innerHTML = "<b style='color:#9c88ff; font-size:1.3rem;'>REVERSAS</b><br><span style='font-weight:normal; margin-top:5px;'>Elas estão em planos diferentes e nunca se cruzam!</span>";
+            statusBox.className = "res-reversas";
+            
+            edgeA.material = new THREE.MeshStandardMaterial({ color: 0x9c88ff, emissive: 0x220044 });
+            edgeB.material = new THREE.MeshStandardMaterial({ color: 0x9c88ff, emissive: 0x220044 });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

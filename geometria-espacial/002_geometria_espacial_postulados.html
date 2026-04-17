@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postulados da Geometria Espacial - Matmov (Corrigido)</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 500px;
+            max-width: 80%;
+            border: 2px solid #c8d6e5;
+        }
+        h2 {
+            margin: 0 0 15px 0;
+            color: #2f3640;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #2c3e50;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #dcdde1;
+            transform: translateY(-2px);
+        }
+        button.active {
+            background: #0097e6;
+            color: white;
+            border-color: #00a8ff;
+            box-shadow: 0 4px 10px rgba(0, 151, 230, 0.4);
+        }
+        #description {
+            font-size: 1.1rem;
+            color: #2f3640;
+            font-weight: 500;
+            padding: 15px;
+            background: #f5f6fa;
+            border-radius: 8px;
+            border-left: 5px solid #0097e6;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .instrucao {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #353b48;
+            font-size: 0.9rem;
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" id="matmov-nav-active">Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">💡 <b>Dica Matmov:</b> Clique e arraste para girar a câmera e ver os detalhes em 3D.</div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Postulados Iniciais</h2>
+        <div class="controls">
+            <button onclick="changePostulado(0)" id="btn-0" class="active">Existência</button>
+            <button onclick="changePostulado(1)" id="btn-1">Determinação</button>
+            <button onclick="changePostulado(2)" id="btn-2">Inclusão</button>
+            <button onclick="changePostulado(3)" id="btn-3">Intersecção</button>
+        </div>
+        <div id="description">
+            Carregando...
+        </div>
+    </div>
+
+    <script>
+        const descriptions = [
+            "<strong>Postulado da Existência:</strong> Numa reta, bem como fora dela, há infinitos pontos. Num plano, bem como fora dele, há infinitos pontos.<br><span style='font-size: 0.9em; color: #7f8fa6;'>Gire a câmera para ver que o espaço está cheio de pontos além dos que estão na reta e no plano.</span>",
+            "<strong>Postulados da Determinação:</strong> Dois pontos distintos determinam uma única reta que passa por eles. Três pontos não colineares determinam um único plano que passa por eles.",
+            "<strong>Postulado da Inclusão:</strong> Se uma reta tem dois pontos distintos num plano, então a reta está inteiramente contida nesse plano.<br><span style='font-size: 0.9em; color: #7f8fa6;'>Observe como a reta inteira 'deita' perfeitamente sobre a superfície do plano.</span>",
+            "<strong>Postulado da Intersecção:</strong> Se dois planos distintos têm um ponto em comum, então a intersecção deles é uma reta.<br><span style='font-size: 0.9em; color: #7f8fa6;'>A linha brilhante no centro mostra exatamente onde os dois planos se cortam.</span>"
+        ];
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        const matPoint = new THREE.MeshBasicMaterial({ color: 0xe84118 }); 
+        const matPointHighlight = new THREE.MeshBasicMaterial({ color: 0xfbc531 }); 
+        const matLine = new THREE.MeshBasicMaterial({ color: 0x273c75 }); 
+        const matLineHighlight = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); 
+        const matPlane = new THREE.MeshBasicMaterial({ color: 0x4cd137, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }); 
+        const matPlane2 = new THREE.MeshBasicMaterial({ color: 0x9c88ff, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }); 
+
+        function createPoint(x, y, z, highlight = false) {
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), highlight ? matPointHighlight : matPoint);
+            mesh.position.set(x, y, z);
+            return mesh;
+        }
+
+        function createLine(length, x, y, z, rotationZ = 0, highlight = false) {
+            const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, length, 8), highlight ? matLineHighlight : matLine);
+            mesh.position.set(x, y, z);
+            mesh.rotation.z = rotationZ;
+            return mesh;
+        }
+
+        function createPlane(width, height, x, y, z, rotationX = 0, rotationY = 0, mat = matPlane) {
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), mat);
+            mesh.position.set(x, y, z);
+            mesh.rotation.x = rotationX;
+            mesh.rotation.y = rotationY;
+            const edges = new THREE.EdgesGeometry(mesh.geometry);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 1 });
+            const wireframe = new THREE.LineSegments(edges, edgeMat);
+            mesh.add(wireframe);
+            return mesh;
+        }
+
+        const groupExistencia = new THREE.Group();
+        const groupDeterminacao = new THREE.Group();
+        const groupInclusao = new THREE.Group();
+        const groupInterseccao = new THREE.Group();
+
+        // 1. EXISTÊNCIA
+        const exPlane = createPlane(8, 8, 0, 0, 0, Math.PI / 2);
+        const exLine = createLine(8, 0, 2, 0, Math.PI / 2);
+        groupExistencia.add(exPlane);
+        groupExistencia.add(exLine);
+        for(let i=-3; i<=3; i+=1.5) exLine.add(createPoint(0, i, 0)); // Pontos travados na reta
+        for(let i=0; i<10; i++) exPlane.add(createPoint(Math.random()*6-3, Math.random()*6-3, 0.05)); // Pontos travados no plano
+        for(let i=0; i<20; i++) groupExistencia.add(createPoint(Math.random()*10-5, Math.random()*8-2, Math.random()*10-5)); 
+        
+        // 2. DETERMINAÇÃO (CORRIGIDO: Técnica Parent-Child)
+        // Reta: adicionamos os pontos como filhos do cilindro
+        const detLine = createLine(8, -4, 0, 0, Math.PI / 4);
+        groupDeterminacao.add(detLine);
+        detLine.add(createPoint(0, -2.5, 0, true)); // Ponto A travado na reta
+        detLine.add(createPoint(0, 2.5, 0, true));  // Ponto B travado na reta
+        
+        // Plano: adicionamos os pontos como filhos do plano
+        const detPlane = createPlane(6, 6, 4, 0, 0, Math.PI / 3, Math.PI / 6);
+        groupDeterminacao.add(detPlane);
+        // O z=0.05 é só para a bolinha não ficar cortada ao meio pelo plano
+        detPlane.add(createPoint(-1.5, 1.5, 0.05, true)); 
+        detPlane.add(createPoint(2, -1, 0.05, true));
+        detPlane.add(createPoint(0, -2, 0.05, true));
+
+        // 3. INCLUSÃO (CORRIGIDO 100%)
+        const incPlane = createPlane(10, 8, 0, 0, 0, Math.PI / 2);
+        groupInclusao.add(incPlane);
+        
+        // A reta recebe 0.05 no eixo Z para ficar sutilmente acima do plano e não piscar (Z-fighting)
+        const incLine = createLine(12, 0, 0, 0.05, Math.PI / 6);
+        
+        // A reta é adicionada diretamente ao plano, herdando a posição dele deitada!
+        incPlane.add(incLine); 
+        
+        // Pontos cravados na reta
+        incLine.add(createPoint(0, -3, 0, true)); 
+        incLine.add(createPoint(0, 3, 0, true));
+
+        // 4. INTERSECÇÃO
+        const intPlane1 = createPlane(8, 8, 0, 0, 0, Math.PI / 2);
+        const intPlane2 = createPlane(8, 8, 0, 0, 0, Math.PI / 4); 
+        intPlane2.material = matPlane2;
+        const intIntersectionLine = createLine(8, 0, 0, 0, Math.PI / 2, true); 
+        groupInterseccao.add(intPlane1);
+        groupInterseccao.add(intPlane2);
+        groupInterseccao.add(intIntersectionLine);
+
+        scene.add(groupExistencia);
+        scene.add(groupDeterminacao);
+        scene.add(groupInclusao);
+        scene.add(groupInterseccao);
+
+        function changePostulado(index) {
+            for(let i=0; i<=3; i++) {
+                document.getElementById('btn-'+i).classList.remove('active');
+            }
+            document.getElementById('btn-'+index).classList.add('active');
+            document.getElementById('description').innerHTML = descriptions[index];
+
+            groupExistencia.visible = false;
+            groupDeterminacao.visible = false;
+            groupInclusao.visible = false;
+            groupInterseccao.visible = false;
+
+            if(index === 0) groupExistencia.visible = true;
+            if(index === 1) groupDeterminacao.visible = true;
+            if(index === 2) groupInclusao.visible = true;
+            if(index === 3) groupInterseccao.visible = true;
+        }
+
+        changePostulado(0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            groupDeterminacao.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

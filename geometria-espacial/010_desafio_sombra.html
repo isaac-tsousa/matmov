@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio das Projeções - Figuras Perfeitas</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e272e; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        #ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 25px 30px; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); text-align: center; min-width: 500px;
+            border: 2px solid #34495e;
+        }
+        h2 { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.4rem; text-transform: uppercase; }
+        #status-box {
+            margin: 15px 0; padding: 15px; background: #f1f2f6; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; color: #2f3542; border-left: 5px solid #eccc68;
+        }
+        .controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        button {
+            border: none; padding: 12px 20px; font-size: 1.1rem; border-radius: 8px; 
+            cursor: pointer; color: white; font-weight: bold; transition: all 0.2s;
+        }
+        #btn-gerar { background: #3742fa; box-shadow: 0 4px 10px rgba(55, 66, 250, 0.3); }
+        #btn-gerar:hover { background: #5352ed; transform: translateY(-2px); }
+        
+        #btn-revelar { background: #ff4757; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3); }
+        #btn-revelar:hover { background: #ff6b81; transform: translateY(-2px); }
+        #btn-revelar.ativo { background: #2ed573; box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3); }
+
+        .instrucao {
+            position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9);
+            padding: 15px; border-radius: 8px; color: #2f3542; font-size: 1rem;
+            pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); line-height: 1.5;
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" id="matmov-nav-active">Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Como jogar:</b><br>
+        Estas figuras 3D estão sendo iluminadas. Vão <b>SEMPRE</b> figuras 2D perfeitas!<br>
+        (Quadrado, Retângulo, Triângulo ou Círculo).<br>
+        Adivinhe qual vai ser a na parede!
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Desafio das Projeções</h2>
+        <div id="status-box">Gerando desafio...</div>
+        
+        <div class="controls">
+            <button id="btn-gerar" onclick="gerarNovoDesafio()">🎲 Gerar Novo Desafio</button>
+            <button id="btn-revelar" onclick="toggleSombra()">👁️ Revelar Sombra</button>
+        </div>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1e272e); 
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+        camera.position.set(-15, 5, 20); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 0, 0);
+
+        // Luz Ambiente
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+        // Luz do "Projetor" perfeitamente reta no eixo Z
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(0, 0, 30); 
+        dirLight.target.position.set(0, 0, -10); 
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -15;
+        dirLight.shadow.camera.right = 15;
+        dirLight.shadow.camera.top = 15;
+        dirLight.shadow.camera.bottom = -15;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+        scene.add(dirLight.target);
+
+        // Parede no fundo
+        const wallGeo = new THREE.PlaneGeometry(40, 40);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, roughness: 0.8 });
+        const wall = new THREE.Mesh(wallGeo, wallMat);
+        wall.position.z = -10; 
+        wall.receiveShadow = false; 
+        scene.add(wall);
+
+        // Grid na parede
+        const grid = new THREE.GridHelper(40, 40, 0xbdc3c7, 0xbdc3c7);
+        grid.rotation.x = Math.PI / 2;
+        grid.position.z = -9.9; 
+        scene.add(grid);
+
+        let solidoAtual = null;
+        let sombraRevelada = false;
+        const matSolido = new THREE.MeshStandardMaterial({ color: 0x3498db, roughness: 0.2 });
+        
+        // Dicionário Rigoroso de Geometrias e seus Perfis Perfeitos
+        const geometrias = [
+            { 
+                tipo: 'Cubo', geo: new THREE.BoxGeometry(4, 4, 4), 
+                perfis: [ { x: 0, y: 0 } ] // Sempre forma Quadrado
+            },
+            { 
+                tipo: 'Cilindro', geo: new THREE.CylinderGeometry(2, 2, 6, 32), 
+                perfis: [ 
+                    { x: Math.PI/2, y: 0 }, // Forma Círculo
+                    { x: 0, y: 0 }          // Forma Retângulo
+                ] 
+            },
+            { 
+                tipo: 'Cone', geo: new THREE.ConeGeometry(2.5, 6, 32), 
+                perfis: [ 
+                    { x: 0, y: 0 },          // Forma Triângulo
+                    { x: Math.PI/2, y: 0 }   // Forma Círculo
+                ] 
+            },
+            { 
+                tipo: 'Pirâmide', geo: new THREE.CylinderGeometry(0, 3, 5, 4), // Pirâmide base quadrada
+                perfis: [ 
+                    { x: 0, y: Math.PI/4 },        // Forma Triângulo (y=45 deixa a face reta)
+                    { x: -Math.PI/2, y: Math.PI/4 } // Forma Quadrado (Base virada pra luz)
+                ] 
+            },
+            { 
+                tipo: 'Prisma Base Quadrada', geo: new THREE.BoxGeometry(2.5, 6, 2.5), 
+                perfis: [ 
+                    { x: 0, y: 0 },         // Forma Retângulo
+                    { x: Math.PI/2, y: 0 }  // Forma Quadrado
+                ] 
+            },
+            { 
+                tipo: 'Esfera', geo: new THREE.SphereGeometry(2.5, 32, 32), 
+                perfis: [ { x: 0, y: 0 } ] // Sempre forma Círculo
+            }
+        ];
+
+        function gerarNovoDesafio() {
+            if (solidoAtual) {
+                scene.remove(solidoAtual);
+                solidoAtual.geometry.dispose();
+            }
+
+            sombraRevelada = false;
+            wall.receiveShadow = false;
+            atualizarBotaoSombra();
+
+            // Sorteia a figura
+            const randomObj = geometrias[Math.floor(Math.random() * geometrias.length)];
+            
+            solidoAtual = new THREE.Mesh(randomObj.geo, matSolido);
+            solidoAtual.castShadow = true;
+            solidoAtual.position.set(0, 0, 5); 
+
+            // Sorteia o perfil perfeito para garantir a sombra bonitinha
+            const perfil = randomObj.perfis[Math.floor(Math.random() * randomObj.perfis.length)];
+            
+            solidoAtual.rotation.x = perfil.x;
+            solidoAtual.rotation.y = perfil.y;
+
+            // Gira no eixo Z (como um relógio) em múltiplos de 90 graus para não ficar torto na parede
+            const angulosZ = [0, 90, 180, 270];
+            const randomZ = angulosZ[Math.floor(Math.random() * angulosZ.length)];
+            solidoAtual.rotation.z = randomZ * (Math.PI / 180);
+
+            scene.add(solidoAtual);
+
+            document.getElementById('status-box').innerHTML = "O objeto está travado em um eixo perfeito!<br>A sombra será um Círculo, Quadrado, Retângulo ou Triângulo?";
+        }
+
+        function toggleSombra() {
+            if (!solidoAtual) return;
+            sombraRevelada = !sombraRevelada;
+            wall.receiveShadow = sombraRevelada; 
+            atualizarBotaoSombra();
+        }
+
+        function atualizarBotaoSombra() {
+            const btn = document.getElementById('btn-revelar');
+            if (sombraRevelada) {
+                btn.innerHTML = "🙈 Ocultar Sombra";
+                btn.classList.add('ativo');
+                document.getElementById('status-box').innerHTML = "Resposta revelada!";
+            } else {
+                btn.innerHTML = "👁️ Revelar Sombra";
+                btn.classList.remove('ativo');
+                document.getElementById('status-box').innerHTML = "A sombra será um Círculo, Quadrado, Retângulo ou Triângulo?";
+            }
+        }
+
+        gerarNovoDesafio();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

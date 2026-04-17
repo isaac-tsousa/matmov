@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postulado da Determinação com Coordenadas - Matmov</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            width: 320px;
+            border: 2px solid #c8d6e5;
+        }
+        h2 {
+            margin: 0 0 15px 0;
+            color: #2f3640;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        .point-group {
+            background: #f5f6fa;
+            border: 1px solid #dcdde1;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .point-header {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        .point-header input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .coord-inputs {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+        .coord-inputs label {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.85rem;
+            color: #555;
+            font-weight: bold;
+            align-items: center;
+        }
+        .coord-inputs input {
+            width: 50px;
+            padding: 5px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        /* Cores das labels para X, Y, Z */
+        .lbl-x { color: #e84118 !important; }
+        .lbl-y { color: #4cd137 !important; }
+        .lbl-z { color: #00a8ff !important; }
+        
+        #status-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e1f5fe;
+            border-left: 5px solid #0097e6;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #02507a;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+        }
+        .instrucao {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #353b48;
+            font-size: 0.9rem;
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" id="matmov-nav-active">Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Dica Matmov:</b><br>
+        Eixo Vermelho = X<br>
+        Eixo Verde = Y<br>
+        Eixo Azul = Z<br>
+        <i>Gire a câmera com o mouse!</i>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Coordenadas no Espaço</h2>
+        
+        <div class="point-group">
+            <div class="point-header">
+                <input type="checkbox" id="chk-a" checked onchange="updateScene()">
+                <span style="color: #e84118;">Ponto A</span>
+            </div>
+            <div class="coord-inputs">
+                <label class="lbl-x">X <input type="number" id="a-x" value="-2" step="1" oninput="updateScene()"></label>
+                <label class="lbl-y">Y <input type="number" id="a-y" value="0" step="1" oninput="updateScene()"></label>
+                <label class="lbl-z">Z <input type="number" id="a-z" value="2" step="1" oninput="updateScene()"></label>
+            </div>
+        </div>
+
+        <div class="point-group">
+            <div class="point-header">
+                <input type="checkbox" id="chk-b" checked onchange="updateScene()">
+                <span style="color: #4cd137;">Ponto B</span>
+            </div>
+            <div class="coord-inputs">
+                <label class="lbl-x">X <input type="number" id="b-x" value="2" step="1" oninput="updateScene()"></label>
+                <label class="lbl-y">Y <input type="number" id="b-y" value="0" step="1" oninput="updateScene()"></label>
+                <label class="lbl-z">Z <input type="number" id="b-z" value="-2" step="1" oninput="updateScene()"></label>
+            </div>
+        </div>
+
+        <div class="point-group">
+            <div class="point-header">
+                <input type="checkbox" id="chk-c" checked onchange="updateScene()">
+                <span style="color: #9c88ff;">Ponto C</span>
+            </div>
+            <div class="coord-inputs">
+                <label class="lbl-x">X <input type="number" id="c-x" value="0" step="1" oninput="updateScene()"></label>
+                <label class="lbl-y">Y <input type="number" id="c-y" value="3" step="1" oninput="updateScene()"></label>
+                <label class="lbl-z">Z <input type="number" id="c-z" value="0" step="1" oninput="updateScene()"></label>
+            </div>
+        </div>
+
+        <div id="status-box">Calculando...</div>
+    </div>
+
+    <script>
+        // Configuração Inicial do Three.js
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Luzes e Helpers (Grade e Eixos)
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xe0e0e0);
+        scene.add(gridHelper);
+        const axesHelper = new THREE.AxesHelper(10);
+        scene.add(axesHelper);
+
+        // Materiais
+        const matA = new THREE.MeshBasicMaterial({ color: 0xe84118 }); // Vermelho
+        const matB = new THREE.MeshBasicMaterial({ color: 0x4cd137 }); // Verde
+        const matC = new THREE.MeshBasicMaterial({ color: 0x9c88ff }); // Roxo
+        const matLine = new THREE.MeshBasicMaterial({ color: 0x2f3640 }); // Cinza Escuro
+        const matPlane = new THREE.MeshBasicMaterial({ color: 0x00a8ff, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+
+        let dynamicObjects = new THREE.Group();
+        scene.add(dynamicObjects);
+
+        function createSphere(pos, material) {
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), material);
+            mesh.position.copy(pos);
+            return mesh;
+        }
+
+        // Função Principal de Atualização Matemática
+        function updateScene() {
+            // Limpa objetos antigos
+            while(dynamicObjects.children.length > 0){ 
+                dynamicObjects.remove(dynamicObjects.children[0]); 
+            }
+
+            // Coletar dados da UI
+            const pointsData = [
+                { id: 'A', active: document.getElementById('chk-a').checked, mat: matA, pos: new THREE.Vector3(parseFloat(document.getElementById('a-x').value)||0, parseFloat(document.getElementById('a-y').value)||0, parseFloat(document.getElementById('a-z').value)||0) },
+                { id: 'B', active: document.getElementById('chk-b').checked, mat: matB, pos: new THREE.Vector3(parseFloat(document.getElementById('b-x').value)||0, parseFloat(document.getElementById('b-y').value)||0, parseFloat(document.getElementById('b-z').value)||0) },
+                { id: 'C', active: document.getElementById('chk-c').checked, mat: matC, pos: new THREE.Vector3(parseFloat(document.getElementById('c-x').value)||0, parseFloat(document.getElementById('c-y').value)||0, parseFloat(document.getElementById('c-z').value)||0) }
+            ];
+
+            const activePoints = pointsData.filter(p => p.active);
+            const statusBox = document.getElementById('status-box');
+
+            // Lógica de Filtragem de Pontos Coincidentes (Mesma Coordenada)
+            const uniquePoints = [];
+            activePoints.forEach(p => {
+                const isDuplicate = uniquePoints.some(u => u.pos.distanceTo(p.pos) < 0.01);
+                if (!isDuplicate) uniquePoints.push(p);
+                dynamicObjects.add(createSphere(p.pos, p.mat)); // Desenha a bolinha sempre
+            });
+
+            // Analisando Geometria
+            if (uniquePoints.length === 0) {
+                statusBox.innerHTML = "Nenhum ponto ativo no espaço.";
+            } 
+            else if (uniquePoints.length === 1) {
+                statusBox.innerHTML = "<b>1 Ponto:</b><br>Indica apenas uma posição no espaço. Por ele passam infinitas retas.";
+            } 
+            else if (uniquePoints.length === 2) {
+                // Desenhar Reta
+                drawLine(uniquePoints[0].pos, uniquePoints[1].pos);
+                statusBox.innerHTML = "<b>2 Pontos Distintos:</b><br>Postulado da Determinação: Eles determinam uma única reta.";
+            } 
+            else if (uniquePoints.length === 3) {
+                // Calcular Vetores AB e AC
+                const p1 = uniquePoints[0].pos;
+                const p2 = uniquePoints[1].pos;
+                const p3 = uniquePoints[2].pos;
+
+                const vAB = new THREE.Vector3().subVectors(p2, p1);
+                const vAC = new THREE.Vector3().subVectors(p3, p1);
+
+                // Produto Vetorial (Se o tamanho for 0, são colineares)
+                const crossProduct = new THREE.Vector3().crossVectors(vAB, vAC);
+                const area = crossProduct.length();
+
+                if (area < 0.01) {
+                    // COLINEARES: Desenha apenas uma reta que pega os pontos extremos
+                    drawLine(p1, p3); // Simplificação visual
+                    statusBox.innerHTML = "<b>3 Pontos Colineares:</b><br>Eles pertencem à mesma linha. Não são capazes de formar um plano único (infinitos planos passam por eles).";
+                    statusBox.style.borderColor = "#e84118";
+                    statusBox.style.backgroundColor = "#ffefea";
+                } else {
+                    // NÃO COLINEARES: Desenha um Plano
+                    drawPlane(p1, p2, p3, crossProduct);
+                    statusBox.innerHTML = "<b>3 Pontos Não Colineares:</b><br>Postulado da Determinação: Eles formam um triângulo invisível e determinam um ÚNICO plano perfeito no espaço.";
+                    statusBox.style.borderColor = "#4cd137";
+                    statusBox.style.backgroundColor = "#eaffea";
+                }
+            }
+
+            // Tratamento especial para status se o usuário ligou 3 botões, mas 2 tem a mesma coordenada
+            if (activePoints.length > uniquePoints.length) {
+                let msg = "<br><span style='color:#e84118; font-size: 0.8em;'>Aviso: Há pontos com coordenadas idênticas se sobrepondo.</span>";
+                statusBox.innerHTML += msg;
+            }
+        }
+
+        function drawLine(p1, p2) {
+            const distance = 40; // Uma reta "infinita" visualmente
+            const direction = new THREE.Vector3().subVectors(p2, p1).normalize();
+            
+            const cylinderGeometry = new THREE.CylinderGeometry(0.04, 0.04, distance, 8);
+            const line = new THREE.Mesh(cylinderGeometry, matLine);
+            
+            // Posiciona no ponto p1 e orienta
+            line.position.copy(p1);
+            line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+            
+            dynamicObjects.add(line);
+        }
+
+        function drawPlane(p1, p2, p3, normalVector) {
+            // Desenha um plano grande
+            const planeGeom = new THREE.PlaneGeometry(20, 20);
+            const plane = new THREE.Mesh(planeGeom, matPlane);
+
+            // Calcula o centro dos 3 pontos para posicionar o plano
+            const center = new THREE.Vector3().addVectors(p1, p2).add(p3).divideScalar(3);
+            plane.position.copy(center);
+
+            // Orienta o plano para olhar na direção do vetor Normal
+            const normal = normalVector.normalize();
+            plane.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+
+            // Adiciona gradezinha no plano para dar noção 3D
+            const grid = new THREE.GridHelper(20, 20, 0xffffff, 0xffffff);
+            grid.rotation.x = Math.PI / 2;
+            grid.material.opacity = 0.2;
+            grid.material.transparent = true;
+            plane.add(grid);
+
+            dynamicObjects.add(plane);
+        }
+
+        // Loop de Animação
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Responsividade
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Iniciar
+        updateScene();
+        animate();
+    </script>
+</body>
+</html>

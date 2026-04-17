@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio ENEM - Planificações e Faces Opostas</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        #ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 25px 30px; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15); text-align: center; min-width: 550px;
+            border: 2px solid #c8d6e5;
+        }
+        h2 { margin: 0 0 15px 0; color: #2c3e50; font-size: 1.4rem; text-transform: uppercase; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        button {
+            background: #ecf0f1; border: 2px solid #bdc3c7; padding: 10px 20px; font-size: 1.1rem;
+            border-radius: 8px; cursor: pointer; color: #2c3e50; font-weight: bold; transition: all 0.2s;
+        }
+        button:hover { background: #dcdde1; transform: translateY(-2px); }
+        button.active { background: #0097e6; color: white; border-color: #00a8ff; }
+        
+        .slider-container { margin-top: 15px; }
+        .slider-container label { font-weight: bold; color: #555; display: block; margin-bottom: 8px; font-size: 1.1rem;}
+        input[type=range] { width: 100%; cursor: pointer; height: 8px; border-radius: 4px; outline: none; }
+
+        #status-box {
+            margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; color: #1565c0; border-left: 5px solid #1976d2;
+            transition: all 0.3s; line-height: 1.4;
+        }
+
+        .instrucao {
+            position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9);
+            padding: 15px; border-radius: 8px; color: #2f3542; font-size: 1rem;
+            pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); line-height: 1.5;
+        }
+        
+        .status-erro { background: #fdedec !important; color: #c0392b !important; border-left-color: #e74c3c !important; }
+        .status-sucesso { background: #e8f5e9 !important; color: #2e7d32 !important; border-left-color: #4caf50 !important; }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" id="matmov-nav-active">Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Desafio ENEM:</b><br>
+        O logotipo deve ficar impresso em faces <b>opostas</b>.<br>
+        Encontre a planificação que deixa as faces<br>
+        Vermelha e Amarela em lados contrários.
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Selecione a Alternativa</h2>
+        <div class="controls">
+            <button onclick="selectNet('I')" id="btn-I" class="active">I (A)</button>
+            <button onclick="selectNet('II')" id="btn-II">II (B)</button>
+            <button onclick="selectNet('III')" id="btn-III">III (C)</button>
+            <button onclick="selectNet('IV')" id="btn-IV">IV (D)</button>
+            <button onclick="selectNet('V')" id="btn-V">V (E)</button>
+        </div>
+        
+        <div class="slider-container">
+            <label>Nível de Montagem</label>
+            <input type="range" id="foldSlider" min="0" max="1" step="0.01" value="0" oninput="updateFold()">
+        </div>
+
+        <div id="status-box">Dobre o cubo para verificar o resultado!</div>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 15, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        const grid = new THREE.GridHelper(30, 30, 0xcccccc, 0xdddddd);
+        scene.add(grid);
+
+        let mainGroup = new THREE.Group();
+        scene.add(mainGroup);
+        // Deita o grupo no chão
+        mainGroup.rotation.x = -Math.PI / 2;
+
+        let hinges = [];
+
+        // 0=Azul, 1=Vermelho, 2=Amarelo
+        const nets = {
+            'I':   [ {x:0,y:1,c:0}, {x:0,y:0,c:2}, {x:0,y:-1,c:1}, {x:-1,y:0,c:0}, {x:1,y:0,c:0}, {x:2,y:0,c:0} ],
+            'II':  [ {x:-1,y:0,c:1}, {x:0,y:0,c:0}, {x:1,y:0,c:0}, {x:2,y:0,c:2}, {x:0,y:1,c:0}, {x:0,y:-1,c:0} ],
+            'III': [ {x:0,y:1,c:2}, {x:0,y:0,c:0}, {x:0,y:-1,c:1}, {x:-1,y:0,c:0}, {x:1,y:0,c:0}, {x:2,y:0,c:0} ], // GABARITO
+            'IV':  [ {x:-1,y:0,c:0}, {x:0,y:0,c:0}, {x:1,y:0,c:2}, {x:2,y:0,c:0}, {x:0,y:1,c:0}, {x:0,y:-1,c:1} ],
+            'V':   [ {x:-1,y:0,c:0}, {x:0,y:0,c:0}, {x:1,y:0,c:0}, {x:2,y:0,c:1}, {x:0,y:1,c:2}, {x:0,y:-1,c:0} ]
+        };
+
+        const size = 3;
+        const thickness = 0.15;
+        const faceGeo = new THREE.BoxGeometry(size, size, thickness);
+        const edgesGeo = new THREE.EdgesGeometry(faceGeo);
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 2 });
+
+        const matBlue = new THREE.MeshStandardMaterial({ color: 0x0097e6, roughness: 0.4 });
+        const matRed = new THREE.MeshStandardMaterial({ color: 0xe84118, roughness: 0.4 });
+        const matYellow = new THREE.MeshStandardMaterial({ color: 0xfbc531, roughness: 0.4 });
+
+        function createFaceMesh(c) {
+            const mat = c === 1 ? matRed : (c === 2 ? matYellow : matBlue);
+            const mesh = new THREE.Mesh(faceGeo, mat);
+            mesh.add(new THREE.LineSegments(edgesGeo, lineMat));
+            return mesh;
+        }
+
+        // --- MOTOR DE DOBRADURA HIERÁRQUICA (BFS) ---
+        function buildNet(netId) {
+            scene.remove(mainGroup);
+            mainGroup = new THREE.Group();
+            scene.add(mainGroup);
+            mainGroup.rotation.x = -Math.PI / 2;
+            mainGroup.position.y = thickness / 2;
+
+            hinges = [];
+            const data = JSON.parse(JSON.stringify(nets[netId])); // Clona os dados
+            
+            // Inicia pelo centro
+            const root = data.find(f => f.x === 0 && f.y === 0);
+            root.visited = true;
+            
+            const rootMesh = createFaceMesh(root.c);
+            mainGroup.add(rootMesh);
+            root.mesh = rootMesh;
+
+            const queue = [root];
+
+            while(queue.length > 0) {
+                const parent = queue.shift();
+
+                // Pega os vizinhos adjacentes (Cima, Baixo, Esquerda, Direita)
+                const neighbors = data.filter(f => !f.visited && (Math.abs(f.x - parent.x) + Math.abs(f.y - parent.y) === 1));
+
+                neighbors.forEach(child => {
+                    child.visited = true;
+                    const childMesh = createFaceMesh(child.c);
+                    child.mesh = childMesh;
+
+                    const dx = child.x - parent.x;
+                    const dy = child.y - parent.y;
+
+                    // Cria um pivô na EXATA borda da face mãe
+                    const pivot = new THREE.Group();
+                    pivot.position.set(dx * size / 2, dy * size / 2, 0);
+                    
+                    // Empurra a face filha para fora do pivô, para alinhar as bordas
+                    childMesh.position.set(dx * size / 2, dy * size / 2, 0);
+
+                    pivot.add(childMesh);
+                    parent.mesh.add(pivot); // Adiciona o pivô ao sistema de coordenadas da face mãe
+
+                    hinges.push({ pivot, dx, dy });
+                    queue.push(child);
+                });
+            }
+        }
+
+        function selectNet(netId) {
+            document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + netId).classList.add('active');
+
+            buildNet(netId);
+            document.getElementById('foldSlider').value = 0;
+            updateFold();
+        }
+
+        function updateFold() {
+            const t = parseFloat(document.getElementById('foldSlider').value);
+            const angle = t * (Math.PI / 2); // Dobra até 90 graus
+
+            // Dobra cada dobradiça de acordo com sua direção
+            hinges.forEach(h => {
+                if (h.dx === 1) h.pivot.rotation.y = -angle;       // Direita: gira pra cima (-Y)
+                else if (h.dx === -1) h.pivot.rotation.y = angle;  // Esquerda: gira pra cima (+Y)
+                else if (h.dy === 1) h.pivot.rotation.x = angle;   // Cima: gira pra cima (+X)
+                else if (h.dy === -1) h.pivot.rotation.x = -angle; // Baixo: gira pra cima (-X)
+            });
+
+            // Lógica de Feedback e Gabarito
+            const statusBox = document.getElementById('status-box');
+            const activeId = document.querySelector('.controls button.active').id.replace('btn-', '');
+
+            if (t < 1) {
+                statusBox.innerHTML = "Deslize para montar a caixa e veja onde as cores param.";
+                statusBox.className = "";
+            } else {
+                if (activeId === 'III') {
+                    statusBox.innerHTML = "🌟 <b>GABARITO CORRETO (C)!</b><br>As faces Vermelha e Amarela ficam exatamente em lados opostos.";
+                    statusBox.className = "status-sucesso";
+                } else {
+                    statusBox.innerHTML = "<b>INCORRETO.</b><br>As faces Vermelha e Amarela acabaram se encostando (ficaram adjacentes).";
+                    statusBox.className = "status-erro";
+                }
+            }
+        }
+
+        // Inicializa com a alternativa C
+        selectNet('I');
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

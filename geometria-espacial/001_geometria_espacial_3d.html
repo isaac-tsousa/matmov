@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Dimensões - Geometria Espacial</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e6f0fa; /* Cor de fundo suave (céu claro) */
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 400px;
+            border: 2px solid #b8d0e8;
+        }
+        h2 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #f0f4f8;
+            border: 2px solid #a0bacc;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #34495e;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #dbe7f3;
+            transform: translateY(-2px);
+        }
+        button.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #357abd;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.4);
+        }
+        #description {
+            font-size: 1.1rem;
+            color: #34495e;
+            font-weight: 500;
+            padding: 15px;
+            background: #f8fbfd;
+            border-radius: 8px;
+            border-left: 5px solid #4a90e2;
+            text-align: left;
+        }
+        .instrucao {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            color: #555;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" id="matmov-nav-active">Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">💡 Clique e arraste na tela para girar a câmera. Use o scroll para aproximar.</div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Selecione a Dimensão:</h2>
+        <div class="controls">
+            <button onclick="changeDimension(0)" id="btn-0">0D</button>
+            <button onclick="changeDimension(1)" id="btn-1">1D</button>
+            <button onclick="changeDimension(2)" id="btn-2">2D</button>
+            <button onclick="changeDimension(3)" id="btn-3" class="active">3D</button>
+        </div>
+        <div id="description">
+            Atualmente: 3D (Espaço - Volume) - Comprimento, Largura e Profundidade (ex: Um bloco)
+        </div>
+    </div>
+
+    <script>
+        // Textos descritivos para cada dimensão
+        const descriptions = {
+            0: "<strong>Atualmente: 0D (Ponto - Posição)</strong><br>Não possui tamanho, apenas indica um local no espaço (ex: Uma marca, um prego).",
+            1: "<strong>Atualmente: 1D (Linha - Comprimento)</strong><br>Possui apenas uma direção e permite medir distância (ex: Um trilho de trem).",
+            2: "<strong>Atualmente: 2D (Plano - Área)</strong><br>Possui duas direções (comprimento e largura). É perfeitamente achatado (ex: Uma folha de papel, o chão).",
+            3: "<strong>Atualmente: 3D (Espaço - Volume)</strong><br>Possui comprimento, largura e profundidade/altura. Ocupa espaço (ex: Um bloco de Minecraft, uma caixa)."
+        };
+
+        // Configuração básica do Three.js
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        // Fundo um pouco mais claro (efeito névoa suave)
+        scene.background = new THREE.Color(0xe6f0fa);
+        scene.fog = new THREE.Fog(0xe6f0fa, 10, 50);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(8, 6, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Iluminação
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        // Chão (Grade)
+        const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0xcccccc);
+        scene.add(gridHelper);
+
+        const planeGeometry = new THREE.PlaneGeometry(20, 20);
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
+        const ground = new THREE.Mesh(planeGeometry, planeMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Criação dos Objetos (0D, 1D, 2D, 3D)
+        const group0D = new THREE.Group();
+        const group1D = new THREE.Group();
+        const group2D = new THREE.Group();
+        const group3D = new THREE.Group();
+
+        // 0D: Ponto (Esfera pequena brilhante)
+        const geo0 = new THREE.SphereGeometry(0.15, 32, 32);
+        const mat0 = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xaa0000 });
+        const pointObj = new THREE.Mesh(geo0, mat0);
+        pointObj.castShadow = true;
+        group0D.add(pointObj);
+
+        // 1D: Linha (Cilindro muito fino para visualização melhor que a linha nativa)
+        const geo1 = new THREE.CylinderGeometry(0.08, 0.08, 8, 16);
+        const mat1 = new THREE.MeshStandardMaterial({ color: 0x33aa33 });
+        const lineObj = new THREE.Mesh(geo1, mat1);
+        lineObj.rotation.z = Math.PI / 2; // Deitar no eixo X
+        lineObj.castShadow = true;
+        group1D.add(lineObj);
+
+        // 2D: Plano (Quadrado)
+        const geo2 = new THREE.PlaneGeometry(6, 6);
+        const mat2 = new THREE.MeshStandardMaterial({ color: 0x3366ff, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+        const squareObj = new THREE.Mesh(geo2, mat2);
+        squareObj.rotation.x = -Math.PI / 2; // Deitar no chão
+        squareObj.position.y = 0.01; // Levemente acima da grade para não bugar a textura
+        squareObj.castShadow = true;
+        squareObj.receiveShadow = true;
+        group2D.add(squareObj);
+
+        // 3D: Cubo / Bloco
+        const geo3 = new THREE.BoxGeometry(4, 4, 4);
+        const mat3 = new THREE.MeshStandardMaterial({ color: 0xffaa00, transparent: true, opacity: 0.85 });
+        const cubeObj = new THREE.Mesh(geo3, mat3);
+        cubeObj.position.y = 2; // Subir para encostar no chão
+        cubeObj.castShadow = true;
+        cubeObj.receiveShadow = true;
+        
+        // Arestas do cubo (estilo Minecraft/Wireframe)
+        const edges = new THREE.EdgesGeometry(geo3);
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+        const cubeEdges = new THREE.LineSegments(edges, lineMat);
+        cubeObj.add(cubeEdges); // Adiciona as linhas pretas ao cubo
+        
+        group3D.add(cubeObj);
+
+        // Adiciona todos à cena (mas apenas 3D visível inicialmente)
+        scene.add(group0D);
+        scene.add(group1D);
+        scene.add(group2D);
+        scene.add(group3D);
+
+        // Função para alternar as dimensões
+        function changeDimension(dim) {
+            // Atualiza botões
+            for(let i=0; i<=3; i++) {
+                document.getElementById('btn-'+i).classList.remove('active');
+            }
+            document.getElementById('btn-'+dim).classList.add('active');
+
+            // Atualiza texto
+            document.getElementById('description').innerHTML = descriptions[dim];
+
+            // Esconde todos
+            group0D.visible = false;
+            group1D.visible = false;
+            group2D.visible = false;
+            group3D.visible = false;
+
+            // Mostra o selecionado
+            if(dim === 0) group0D.visible = true;
+            if(dim === 1) group1D.visible = true;
+            if(dim === 2) group2D.visible = true;
+            if(dim === 3) group3D.visible = true;
+        }
+
+        // Estado inicial
+        changeDimension(3);
+
+        // Loop de Animação
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Necessário para o Damping
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Ajustar tela quando a janela mudar de tamanho
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

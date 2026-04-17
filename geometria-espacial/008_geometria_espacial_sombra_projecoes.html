@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeções Ortogonais (Sombras) - Matmov</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #2c3e50; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        #ui-panel {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 450px;
+        }
+        h2 { margin: 0 0 15px 0; color: #2c3e50; font-size: 1.2rem; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        button {
+            background: #ecf0f1; border: 2px solid #bdc3c7; padding: 8px 15px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; color: #34495e;
+        }
+        button.active { background: #e67e22; color: white; border-color: #d35400; }
+        .slider-group { margin-top: 15px; text-align: left; }
+        .slider-group label { font-weight: bold; color: #555; font-size: 0.9rem; }
+        input[type=range] { width: 100%; margin-top: 5px; cursor: pointer; }
+        #status { 
+            margin-top: 15px; padding: 10px; background: #fff3e0; 
+            border-left: 4px solid #e67e22; color: #d35400; font-weight: bold; border-radius: 4px;
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" id="matmov-nav-active">Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Projeção Ortogonal (Sombra)</h2>
+        <div class="controls">
+            <button onclick="changeShape('cilindro')" id="btn-cilindro" class="active">Cilindro</button>
+            <button onclick="changeShape('cone')" id="btn-cone">Cone</button>
+            <button onclick="changeShape('cubo')" id="btn-cubo">Cubo</button>
+            <button onclick="changeShape('piramide')" id="btn-piramide">Pirâmide</button>
+        </div>
+        
+        <div class="slider-group">
+            <label>Girar no Eixo X (Tombar para frente/trás)</label>
+            <input type="range" id="rotX" min="0" max="90" value="0" oninput="updateRotation()">
+        </div>
+        <div class="slider-group">
+            <label>Girar no Eixo Z (Tombar para os lados)</label>
+            <input type="range" id="rotZ" min="0" max="90" value="0" oninput="updateRotation()">
+        </div>
+
+        <div id="status">Sombra atual: Círculo</div>
+    </div>
+
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x34495e); // Fundo escuro estúdio
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 15, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // LIGA AS SOMBRAS
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // LUZ DO "SOL DO MEIO-DIA" (Direcional, reta para baixo)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(0, 20, 0); // Exatamente no teto
+        dirLight.target.position.set(0, 0, 0);
+        dirLight.castShadow = true;
+        // Ajustando a qualidade da sombra
+        dirLight.shadow.camera.left = -10;
+        dirLight.shadow.camera.right = 10;
+        dirLight.shadow.camera.top = 10;
+        dirLight.shadow.camera.bottom = -10;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+        scene.add(dirLight.target);
+
+        // O CHÃO (Palco)
+        const planeGeo = new THREE.PlaneGeometry(30, 30);
+        const planeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1 });
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        plane.rotation.x = -Math.PI / 2;
+        plane.receiveShadow = true; // RECEBE A SOMBRA
+        scene.add(plane);
+
+        // Grade para ajudar na perspectiva
+        const grid = new THREE.GridHelper(30, 30, 0xbdc3c7, 0xbdc3c7);
+        grid.position.y = 0.01;
+        scene.add(grid);
+
+        // MATERIAIS DOS SÓLIDOS
+        const matSolid = new THREE.MeshStandardMaterial({ color: 0x3498db, roughness: 0.3 });
+
+        // GEOMETRIAS
+        const shapes = {
+            'cilindro': new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 6, 32), matSolid),
+            'cone': new THREE.Mesh(new THREE.ConeGeometry(2.5, 6, 32), matSolid),
+            'cubo': new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), matSolid),
+            'piramide': new THREE.Mesh(new THREE.CylinderGeometry(0, 3, 5, 4), matSolid) // Pirâmide base quadrada
+        };
+
+        // Configura todos os sólidos
+        let currentShapeMesh = null;
+        for (let key in shapes) {
+            shapes[key].castShadow = true;
+            shapes[key].position.y = 5; // Suspende no ar
+            
+            // Ajuste especial para a pirâmide ficar alinhada com os eixos
+            if(key === 'piramide') shapes[key].rotation.y = Math.PI / 4; 
+        }
+
+        // FUNÇÕES DE CONTROLE
+        function changeShape(shapeName) {
+            // Atualiza botões
+            document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + shapeName).classList.add('active');
+
+            // Remove a forma antiga da cena
+            if (currentShapeMesh) scene.remove(currentShapeMesh);
+
+            // Adiciona a nova forma
+            currentShapeMesh = shapes[shapeName];
+            scene.add(currentShapeMesh);
+
+            // Reseta a rotação e os sliders
+            document.getElementById('rotX').value = 0;
+            document.getElementById('rotZ').value = 0;
+            updateRotation();
+        }
+
+        function updateRotation() {
+            if (!currentShapeMesh) return;
+            
+            const xDeg = document.getElementById('rotX').value;
+            const zDeg = document.getElementById('rotZ').value;
+            
+            // Converte para radianos
+            currentShapeMesh.rotation.x = xDeg * (Math.PI / 180);
+            currentShapeMesh.rotation.z = zDeg * (Math.PI / 180);
+
+            // Se for a pirâmide, mantém o ajuste de Y
+            if (currentShapeMesh.geometry.type === 'CylinderGeometry' && currentShapeMesh.geometry.parameters.radialSegments === 4) {
+                currentShapeMesh.rotation.y = Math.PI / 4;
+            }
+
+            updateStatusText(xDeg, zDeg);
+        }
+
+        function updateStatusText(x, z) {
+            const status = document.getElementById('status');
+            const shapeId = document.querySelector('.controls button.active').id.replace('btn-', '');
+            
+            let text = "Observando a Sombra...";
+            
+            // Lógica simples para dar feedback sobre a forma da sombra
+            if (x == 0 && z == 0) {
+                if (shapeId === 'cilindro' || shapeId === 'cone') text = "A sombra é um CÍRCULO perfeito.";
+                if (shapeId === 'cubo' || shapeId === 'piramide') text = "A sombra é um QUADRADO.";
+            } else if (x == 90 || z == 90) {
+                if (shapeId === 'cilindro') text = "A sombra é um RETÂNGULO.";
+                if (shapeId === 'cone' || shapeId === 'piramide') text = "A sombra é um TRIÂNGULO.";
+                if (shapeId === 'cubo') text = "A sombra continua sendo um QUADRADO.";
+            } else {
+                text = "A sombra é uma figura de transição (achatada).";
+            }
+            
+            status.innerText = text;
+        }
+
+        // Inicializa
+        changeShape('cilindro');
+
+        // Loop de Renderização
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Responsividade
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

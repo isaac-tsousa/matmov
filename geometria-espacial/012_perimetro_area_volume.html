@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perímetro, Área e Volume - Matmov</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+        #ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 20px 30px; border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); text-align: center; min-width: 500px;
+            max-width: 80%; border: 2px solid #c8d6e5;
+        }
+        h2 { margin: 0 0 15px 0; color: #2f3640; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        button {
+            background: #ecf0f1; border: 2px solid #bdc3c7; padding: 10px 15px; font-size: 1rem;
+            border-radius: 8px; cursor: pointer; color: #2c3e50; font-weight: bold; transition: all 0.2s;
+        }
+        button:hover { background: #dcdde1; transform: translateY(-2px); }
+        button.active { background: #0097e6; color: white; border-color: #00a8ff; box-shadow: 0 4px 10px rgba(0, 151, 230, 0.4); }
+        #description {
+            font-size: 1.1rem; color: #2f3640; font-weight: 500; padding: 15px; background: #f5f6fa;
+            border-radius: 8px; border-left: 5px solid #0097e6; text-align: left; line-height: 1.4;
+        }
+        .instrucao {
+            position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9);
+            padding: 10px 15px; border-radius: 8px; color: #353b48; font-size: 0.9rem;
+            pointer-events: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        /* Cores específicas para os modos */
+        .desc-perimetro { border-left-color: #e84118 !important; }
+        .desc-area { border-left-color: #4cd137 !important; }
+        .desc-volume { border-left-color: #00a8ff !important; }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" id="matmov-nav-active">Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Dica Matmov:</b><br>
+        Clique e arraste para girar. Conte os blocos e quadrados!
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Medidas Geométricas</h2>
+        <div class="controls">
+            <button onclick="changeMode(0)" id="btn-0" class="active">Perímetro (1D)</button>
+            <button onclick="changeMode(1)" id="btn-1">Área (2D)</button>
+            <button onclick="changeMode(2)" id="btn-2">Volume (3D)</button>
+        </div>
+        <div id="description" class="desc-perimetro">Carregando...</div>
+    </div>
+
+    <script>
+        const descriptions = [
+            "<strong>Perímetro: O Contorno (A Cerca)</strong><br>Mede apenas a linha ao redor. É uma medida unidimensional (1D).<br><b style='color:#e84118'>Soma dos lados = 3 + 4 + 3 + 4 = 14 metros.</b>",
+            "<strong>Área: A Superfície (O Piso)</strong><br>Mede o preenchimento do chão plano. É bidimensional (2D).<br><b style='color:#4cd137'>Base x Altura = 3 x 4 = 12 metros quadrados (m²).</b><br><i>(Conte os 12 quadradinhos no chão!)</i>",
+            "<strong>Volume: O Espaço (A Piscina/Prédio)</strong><br>Mede a capacidade ou o espaço ocupado. É tridimensional (3D).<br><b style='color:#00a8ff'>Área da Base x Profundidade = 12 x 3 = 36 metros cúbicos (m³).</b><br><i>(São 36 cubinhos empilhados!)</i>"
+        ];
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        // Grade de fundo suave
+        const gridHelper = new THREE.GridHelper(20, 20, 0xdddddd, 0xeeeeee);
+        gridHelper.position.y = -0.01;
+        scene.add(gridHelper);
+
+        // Dimensões do nosso objeto de estudo
+        const width = 4;
+        const depth = 3;
+        const height = 3;
+
+        const groupPerimetro = new THREE.Group();
+        const groupArea = new THREE.Group();
+        const groupVolume = new THREE.Group();
+
+        // 1. PERÍMETRO (Tubos formando as bordas)
+        const matPerimetro = new THREE.MeshBasicMaterial({ color: 0xe84118 });
+        
+        // Bordas horizontais (X)
+        const edge1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, width, 8), matPerimetro);
+        edge1.rotation.z = Math.PI / 2; edge1.position.set(0, 0, depth/2);
+        const edge2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, width, 8), matPerimetro);
+        edge2.rotation.z = Math.PI / 2; edge2.position.set(0, 0, -depth/2);
+        
+        // Bordas de profundidade (Z)
+        const edge3 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, depth, 8), matPerimetro);
+        edge3.rotation.x = Math.PI / 2; edge3.position.set(width/2, 0, 0);
+        const edge4 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, depth, 8), matPerimetro);
+        edge4.rotation.x = Math.PI / 2; edge4.position.set(-width/2, 0, 0);
+
+        groupPerimetro.add(edge1, edge2, edge3, edge4);
+
+
+        // 2. ÁREA (Quadradinhos no chão)
+        const matArea = new THREE.MeshStandardMaterial({ color: 0x4cd137, transparent: true, opacity: 0.8 });
+        const matAreaEdge = new THREE.LineBasicMaterial({ color: 0x27ae60, linewidth: 2 });
+        const planeGeo = new THREE.PlaneGeometry(0.95, 0.95); // Ligeiramente menor que 1 para ver as divisões
+        
+        for (let x = 0; x < width; x++) {
+            for (let z = 0; z < depth; z++) {
+                const tile = new THREE.Mesh(planeGeo, matArea);
+                tile.rotation.x = -Math.PI / 2;
+                // Centraliza o grid em relação ao (0,0,0)
+                tile.position.set(x - width/2 + 0.5, 0, z - depth/2 + 0.5);
+                groupArea.add(tile);
+            }
+        }
+
+
+        // 3. VOLUME (Cubinhos empilhados)
+        const matVolume = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.85 });
+        const boxGeo = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+        const edgesGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
+        const matEdgeVolume = new THREE.LineBasicMaterial({ color: 0x0097e6 });
+
+        for (let x = 0; x < width; x++) {
+            for (let z = 0; z < depth; z++) {
+                for (let y = 0; y < height; y++) {
+                    const cube = new THREE.Mesh(boxGeo, matVolume);
+                    cube.position.set(x - width/2 + 0.5, y + 0.5, z - depth/2 + 0.5);
+                    
+                    // Arestas para dar estilo bloco
+                    const cubeEdges = new THREE.LineSegments(edgesGeo, matEdgeVolume);
+                    cube.add(cubeEdges);
+                    
+                    groupVolume.add(cube);
+                }
+            }
+        }
+
+        scene.add(groupPerimetro);
+        scene.add(groupArea);
+        scene.add(groupVolume);
+
+        function changeMode(index) {
+            // Atualiza botões
+            for(let i=0; i<=2; i++) {
+                document.getElementById('btn-'+i).classList.remove('active');
+            }
+            document.getElementById('btn-'+index).classList.add('active');
+
+            // Atualiza texto e classe de cor
+            const desc = document.getElementById('description');
+            desc.innerHTML = descriptions[index];
+            desc.className = index === 0 ? 'desc-perimetro' : index === 1 ? 'desc-area' : 'desc-volume';
+
+            // Visibilidade
+            groupPerimetro.visible = false;
+            groupArea.visible = false;
+            groupVolume.visible = false;
+
+            if(index === 0) groupPerimetro.visible = true;
+            if(index === 1) {
+                groupPerimetro.visible = true; // Mostra a borda também na área
+                groupArea.visible = true;
+            }
+            if(index === 2) groupVolume.visible = true;
+        }
+
+        // Inicializa
+        changeMode(0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posições Relativas: Retas e Planos - Matmov</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 500px;
+            max-width: 80%;
+            border: 2px solid #c8d6e5;
+        }
+        h2 {
+            margin: 0 0 15px 0;
+            color: #2f3640;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #2c3e50;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #dcdde1;
+            transform: translateY(-2px);
+        }
+        button.active {
+            background: #0097e6;
+            color: white;
+            border-color: #00a8ff;
+            box-shadow: 0 4px 10px rgba(0, 151, 230, 0.4);
+        }
+        #description {
+            font-size: 1.1rem;
+            color: #2f3640;
+            font-weight: 500;
+            padding: 15px;
+            background: #f5f6fa;
+            border-radius: 8px;
+            border-left: 5px solid #0097e6;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .instrucao {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #353b48;
+            font-size: 0.9rem;
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" id="matmov-nav-active">Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" >Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div class="instrucao">
+        💡 <b>Dica Matmov:</b><br>
+        Clique e arraste para girar a câmera.<br>
+        <i>Olhe de cima para baixo nas retas reversas!</i>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <h2>Posições Relativas entre Retas</h2>
+        <div class="controls">
+            <button onclick="changePosition(0)" id="btn-0" class="active">Concorrentes</button>
+            <button onclick="changePosition(1)" id="btn-1">Paralelas</button>
+            <button onclick="changePosition(2)" id="btn-2">Reversas</button>
+        </div>
+        <div id="description">Carregando...</div>
+    </div>
+
+    <script>
+        const descriptions = [
+            "<strong>Retas Concorrentes (Coplanares):</strong><br>Estão no mesmo plano e se cruzam em exatamente 1 único ponto. <br><span style='font-size: 0.9em; color: #7f8fa6;'>(Ex: Um cruzamento de ruas no mesmo nível).</span>",
+            "<strong>Retas Paralelas (Coplanares):</strong><br>Estão no mesmo plano, vão para a mesma direção e NUNCA se cruzam. Tem 0 pontos em comum. <br><span style='font-size: 0.9em; color: #7f8fa6;'>(Ex: Trilhos de um trem).</span>",
+            "<strong>Retas Reversas (Não Coplanares):</strong><br>O grande truque! Elas <b>NÃO</b> estão no mesmo plano, vão para direções diferentes e NUNCA se cruzam. <br><span style='font-size: 0.9em; color: #e84118;'>Gire a câmera para ver: o que parece um 'X' de cima, na verdade é um viaduto!</span>"
+        ];
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 12, 12); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Iluminação
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(5, 15, 5);
+        scene.add(dirLight);
+
+        // Materiais
+        const matLine1 = new THREE.MeshBasicMaterial({ color: 0xe84118 }); 
+        const matLine2 = new THREE.MeshBasicMaterial({ color: 0x0097e6 }); 
+        const matPoint = new THREE.MeshBasicMaterial({ color: 0xfbc531 }); 
+        const matPlane = new THREE.MeshBasicMaterial({ color: 0x4cd137, side: THREE.DoubleSide, transparent: true, opacity: 0.25 }); 
+        const matPlaneTop = new THREE.MeshBasicMaterial({ color: 0x9c88ff, side: THREE.DoubleSide, transparent: true, opacity: 0.25 }); 
+
+        // Geometrias Base (Retas mais finas e elegantes)
+        const planeGeo = new THREE.PlaneGeometry(12, 12);
+        const lineGeo = new THREE.CylinderGeometry(0.04, 0.04, 14, 16);
+        const pointGeo = new THREE.SphereGeometry(0.15, 16, 16);
+
+        // Função para criar planos com bordas
+        function createPlane(mat) {
+            const mesh = new THREE.Mesh(planeGeo, mat);
+            mesh.rotation.x = -Math.PI / 2; // Deita o plano perfeitamente no eixo XZ
+            
+            const edges = new THREE.EdgesGeometry(planeGeo);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x555555, linewidth: 1 });
+            const wireframe = new THREE.LineSegments(edges, edgeMat);
+            mesh.add(wireframe);
+            
+            return mesh;
+        }
+
+        // Função CORRIGIDA para criar retas coladas no plano
+        function createLine(mat, rotZ) {
+            const mesh = new THREE.Mesh(lineGeo, mat);
+            // REMOVIDO: mesh.rotation.x = Math.PI / 2; (Não precisamos deitar de novo, o plano já está deitado)
+            mesh.rotation.z = rotZ; // Gira a reta sobre a superfície do plano
+            mesh.position.z = 0.05; // Eleva 1 mm para não piscar a cor (Z-fighting)
+            return mesh;
+        }
+
+        // --- GRUPOS ---
+        const groupConcorrentes = new THREE.Group();
+        const groupParalelas = new THREE.Group();
+        const groupReversas = new THREE.Group();
+
+        // 1. CONCORRENTES
+        const concPlane = createPlane(matPlane);
+        groupConcorrentes.add(concPlane);
+        
+        const concLine1 = createLine(matLine1, Math.PI / 4); // +45 graus
+        const concLine2 = createLine(matLine2, -Math.PI / 4); // -45 graus
+        concPlane.add(concLine1); 
+        concPlane.add(concLine2); 
+        
+        // Ponto de Intersecção 
+        const concPoint = new THREE.Mesh(pointGeo, matPoint);
+        concPoint.position.set(0, 0, 0.1); // No eixo local do plano, Z é para cima
+        concPlane.add(concPoint);
+
+
+        // 2. PARALELAS
+        const parPlane = createPlane(matPlane);
+        groupParalelas.add(parPlane);
+        
+        const parLine1 = createLine(matLine1, 0);
+        parLine1.position.x = -2; // Move no eixo local do plano
+        const parLine2 = createLine(matLine2, 0);
+        parLine2.position.x = 2;  
+        
+        parPlane.add(parLine1);
+        parPlane.add(parLine2);
+
+
+        // 3. REVERSAS (O VIADUTO)
+        const revPlaneBottom = createPlane(matPlane);
+        revPlaneBottom.position.y = -2; // Altura no mundo 3D
+        groupReversas.add(revPlaneBottom);
+
+        const revPlaneTop = createPlane(matPlaneTop);
+        revPlaneTop.position.y = 2; 
+        groupReversas.add(revPlaneTop);
+
+        const revLineBottom = createLine(matLine1, Math.PI / 4); 
+        revPlaneBottom.add(revLineBottom);
+
+        const revLineTop = createLine(matLine2, -Math.PI / 4); 
+        revPlaneTop.add(revLineTop);
+
+        // Linha pontilhada (Pilar)
+        const pilarMat = new THREE.LineDashedMaterial({ color: 0x888888, dashSize: 0.2, gapSize: 0.2 });
+        const pilarGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -2, 0), new THREE.Vector3(0, 2, 0)]);
+        const pilar = new THREE.Line(pilarGeo, pilarMat);
+        pilar.computeLineDistances();
+        groupReversas.add(pilar);
+
+
+        // Adiciona à cena
+        scene.add(groupConcorrentes);
+        scene.add(groupParalelas);
+        scene.add(groupReversas);
+
+        function changePosition(index) {
+            for(let i=0; i<=2; i++) {
+                document.getElementById('btn-'+i).classList.remove('active');
+            }
+            document.getElementById('btn-'+index).classList.add('active');
+            document.getElementById('description').innerHTML = descriptions[index];
+
+            groupConcorrentes.visible = false;
+            groupParalelas.visible = false;
+            groupReversas.visible = false;
+
+            if(index === 0) groupConcorrentes.visible = true;
+            if(index === 1) groupParalelas.visible = true;
+            if(index === 2) {
+                groupReversas.visible = true;
+                // Câmera perfeitamente reta de cima para criar a ilusão de óptica do viaduto
+                camera.position.set(0, 15, 0); 
+                camera.lookAt(0, 0, 0);
+            } else {
+                camera.position.set(10, 12, 12);
+                camera.lookAt(0, 0, 0);
+            }
+        }
+
+        // Inicializa
+        changePosition(0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

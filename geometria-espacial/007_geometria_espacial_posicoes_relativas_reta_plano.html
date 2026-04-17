@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reta e Plano: Posições Relativas - Matmov</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        #ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); padding: 20px 30px; border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); text-align: center; min-width: 500px;
+            max-width: 80%; border: 2px solid #c8d6e5;
+        }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        button {
+            background: #ecf0f1; border: 2px solid #bdc3c7; padding: 10px 15px;
+            font-size: 1rem; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        button.active { background: #0097e6; color: white; border-color: #00a8ff; }
+        #description {
+            font-size: 1.1rem; padding: 15px; background: #f5f6fa;
+            border-radius: 8px; border-left: 5px solid #0097e6; text-align: left;
+        }
+    </style>
+<script>if(window.self!==window.top)document.addEventListener("DOMContentLoaded",function(){document.getElementById("matmov-nav").style.display="none";});</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<nav id="matmov-nav">
+  <span id="matmov-nav-title">Geometria Espacial ▸</span>
+  <div id="matmov-nav-links">
+    <a href="./001_geometria_espacial_3d.html" >Dimensões 3D</a>
+    <a href="./002_geometria_espacial_postulados.html" >Postulados</a>
+    <a href="./003_geometria_espacial_determinacao.html" >Determinação</a>
+    <a href="./004_geometria_espacial_posicoes_relativas.html" >Pos. Relativas</a>
+    <a href="./005_geometria_espacial_retas_no_cubo.html" >Retas no Cubo</a>
+    <a href="./006_geometria_espacial_posicoes_relativas_planos.html" >Planos</a>
+    <a href="./007_geometria_espacial_posicoes_relativas_reta_plano.html" id="matmov-nav-active">Reta e Plano</a>
+    <a href="./008_geometria_espacial_sombra_projecoes.html" >Sombras</a>
+    <a href="./010_desafio_sombra.html" >Desafio Sombra</a>
+    <a href="./011_desafio_planificacao.html" >Planificação</a>
+    <a href="./012_perimetro_area_volume.html" >Área e Volume</a>
+  </div>
+</nav>
+<style>
+  #matmov-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: rgba(20, 30, 50, 0.93);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 14px;
+    gap: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #matmov-nav::-webkit-scrollbar { display: none; }
+  #matmov-nav-title {
+    color: #7eb8f7;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  #matmov-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  #matmov-nav a {
+    color: #c8daf5;
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+  }
+  #matmov-nav a:hover {
+    background: rgba(126,184,247,0.18);
+    color: #fff;
+    border-color: rgba(126,184,247,0.35);
+  }
+  #matmov-nav a#matmov-nav-active {
+    background: rgba(126,184,247,0.28);
+    color: #fff;
+    border-color: rgba(126,184,247,0.55);
+    font-weight: 600;
+  }
+</style>
+
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-panel">
+        <div class="controls">
+            <button onclick="changePosition(0)" id="btn-0" class="active">Reta Contida</button>
+            <button onclick="changePosition(1)" id="btn-1">Reta Concorrente</button>
+            <button onclick="changePosition(2)" id="btn-2">Reta Paralela</button>
+        </div>
+        <div id="description">Carregando...</div>
+    </div>
+
+    <script>
+        const descriptions = [
+            "<strong>Reta Contida no Plano:</strong> Todos os pontos da reta pertencem ao plano. Têm infinitos pontos em comum. <br><i>Exemplo: Uma linha desenhada numa folha de papel.</i>",
+            "<strong>Reta Concorrente (Secante):</strong> A reta fura o plano em um único ponto. <br><i>Exemplo: Um lápis atravessando uma folha de papel.</i>",
+            "<strong>Reta Paralela ao Plano:</strong> A reta e o plano não possuem nenhum ponto em comum. <br><i>Exemplo: Uma caneta segurada acima da mesa, perfeitamente horizontal.</i>"
+        ];
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf4f7f6);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(12, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+        // Plano Base
+        const planeGeo = new THREE.PlaneGeometry(12, 12);
+        const planeMat = new THREE.MeshStandardMaterial({ color: 0x4cd137, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        plane.rotation.x = -Math.PI / 2;
+        scene.add(plane);
+
+        // Borda do plano
+        const edges = new THREE.EdgesGeometry(planeGeo);
+        const lineSegments = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x333333 }));
+        plane.add(lineSegments);
+
+        // Reta
+        const lineGeo = new THREE.CylinderGeometry(0.06, 0.06, 16, 16);
+        const lineMat = new THREE.MeshStandardMaterial({ color: 0xe84118 });
+        const line = new THREE.Mesh(lineGeo, lineMat);
+        scene.add(line);
+
+        // Ponto de Intersecção (para modo concorrente)
+        const pointGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        const pointMat = new THREE.MeshBasicMaterial({ color: 0xfbc531 });
+        const point = new THREE.Mesh(pointGeo, pointMat);
+        scene.add(point);
+
+        function changePosition(index) {
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + index).classList.add('active');
+            document.getElementById('description').innerHTML = descriptions[index];
+
+            point.visible = false;
+
+            if (index === 0) { // Contida
+                line.rotation.set(0, 0, Math.PI / 2);
+                line.position.set(0, 0.05, 0);
+            } else if (index === 1) { // Concorrente
+                line.rotation.set(Math.PI / 4, 0, 0);
+                line.position.set(0, 0, 0);
+                point.visible = true;
+            } else if (index === 2) { // Paralela
+                line.rotation.set(0, 0, Math.PI / 2);
+                line.position.set(0, 3, 0);
+            }
+        }
+
+        changePosition(0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
